@@ -1,14 +1,15 @@
 import * as React from "react";
 import Header from "./Header";
+import Label from "./Label";
+import Value from "./Value";
 import HeroList, { HeroListItem } from "./HeroList";
-import Progress from "./Progress";
 import './App.css';
 import JSONTree from 'react-json-tree';
-import Button from '@material-ui/core/Button';
-import ImageIcon from '@material-ui/icons/Image';
+var groupBy = require('lodash.groupby');
+var mergeWith = require('lodash.mergewith');
+var isArray = require('lodash.isarray');
 require('es6-promise').polyfill();
 require('isomorphic-fetch');
-
 function getAttrs (val)
 {
   const result = [];
@@ -37,6 +38,7 @@ function prepareData (sampledata)
   {
     preparedData.name = sampledata['ado:publishing'].model._name;
     preparedData.class = sampledata['ado:publishing'].model._class;
+    preparedData.type = sampledata['ado:publishing'].model._idclass;
     preparedData.images = sampledata.images;
     preparedData.chapters = [];
     for (let [index, val] of sampledata['ado:publishing'].model.notebook.chapter.entries())
@@ -78,6 +80,7 @@ function prepareData (sampledata)
       var object = {};
       object.name = oval._name;
       object.class = oval._class;
+      object.type = oval._idclass;
       object.ochapters = [];
       for (let [index, val] of oval.notebook.chapter.entries())
       {
@@ -122,6 +125,7 @@ function prepareData (sampledata)
   {
     preparedData.name = sampledata['ado:publishing'].object._name;
     preparedData.class = sampledata['ado:publishing'].object._class;
+    preparedData.type = sampledata['ado:publishing'].object._idclass;
     preparedData.images = "";
     preparedData.chapters = [];
     for (let [index, val] of sampledata['ado:publishing'].object.notebook.chapter.entries())
@@ -156,6 +160,34 @@ function prepareData (sampledata)
     }
     preparedData.objects = [];
   }
+  var groupedobjects = groupBy(preparedData.objects, 'class');
+  var out = [];
+  Object.keys(groupedobjects).forEach(function (item)
+  {
+    function customizer (objValue, srcValue)
+    {
+      if (isArray(srcValue))
+      {
+        return mergeWith(srcValue, objValue, customizer);
+      }
+      else if (typeof objValue === 'string')
+      {
+        if (!objValue.includes(srcValue))
+        {
+          return objValue.concat('\n' + srcValue);
+        }
+        else
+        {
+          return objValue;
+        }
+      }
+    }
+    var merged = groupedobjects[item][0];
+    mergeWith(merged, ...groupedobjects[item], customizer);
+
+    out.push(merged);
+  });
+  preparedData.objects=out;
   return preparedData;
 }
 function getComplexVals (passedval, passedinp)
@@ -237,7 +269,6 @@ function getValue (inp)
     var splited = inp.value.param.split('/');
     return splited[splited.length - 1];
   }
-
   else if (inp.hasOwnProperty('link') && inp.link.hasOwnProperty('endpoint'))
   {
     return (inp.link.endpoint._name);
@@ -257,83 +288,6 @@ function getValue (inp)
     return "";
   }
 }
-const handleClick = async (e, f, data) =>
-{
-  e.stopPropagation();
-  e.preventDefault();
-  if (f[f.length - 1] !== 'model')
-  {
-    f.push("model");
-  }
-  const prepareddata = {};
-  prepareddata.model = data;
-  prepareddata.images = "";
-  var ref = f.reduceRight((o, i) => o[i], prepareddata);
-  return Word.run(async context =>
-  {
-
-
-    var selectionRange = context.document.getSelection();
-
-
-    if (Array.isArray(ref))
-    {
-      if (f.length === 2)
-      {
-        selectionRange.insertText("{FOR " + f[0] + " in " + f[1] + "." + f[0] + "}\n\n{END-FOR " + f[0] + "}", "After");
-      }
-      else
-      {
-        selectionRange.insertText("{FOR " + f[0] + " in $" + f[2] + "." + f[0] + "}\n\n{END-FOR " + f[0] + "}", "After");
-      }
-    }
-    ///// end arrays ///
-    ///// searchname ////
-    else if (f[f.length - 2] !== 'objects' && f[0] === 'searchname')
-    {
-      selectionRange.insertText("{IF typeof gV(model, '" + ref + "') !== 'object'}{gV(model, '" + ref + "')}{END-IF}", "After");
-    }
-    else if (f[f.length - 2] === 'objects' && f[0] === 'searchname')
-    {
-      selectionRange.insertText("{IF typeof gV($objects, '" + ref + "') !== 'object'}{gV($objects, '" + ref + "')}{END-IF}", "After");
-    }
-    ///// searchname ////
-    ///// root////
-    else if (f.length === 2 && f[0] === 'name')
-    {
-      selectionRange.insertText("{model.name}", "After");
-    }
-    else if (f.length === 2 && f[0] === 'class')
-    {
-      selectionRange.insertText("{model.class}", "After");
-    }
-    else if (f.length === 2 && f[0] === 'images')
-    {
-      selectionRange.insertText("{FOR image IN model.images}\n{IMAGE insertImg($image,25)}\n{END-FOR image}", "After");
-    }
-    ///// root////
-    /// atriname///
-    else if (!isNaN(f[1]) && f[0] === 'name')
-    {
-      selectionRange.insertText("{$" + f[2] + ".name}", "After");
-    }
-    ////////////////////
-    ///attrivalue///
-    else if (!isNaN(f[1]) && f[0] === 'value')
-    {
-      selectionRange.insertText("{IF typeof $" + f[2] + ".value !== 'object'}{$" + f[2] + ".value}{END-IF}", "After");
-    }
-    //////////////////
-    ////objectclass////
-    else if (!isNaN(f[1]) && f[0] === 'class')
-    {
-      selectionRange.insertText("{$" + f[2] + ".class}", "After");
-    }
-    await context.sync();
-  });
-};
-
-
 export default class App extends React.Component
 {
   constructor(props, context)
@@ -350,7 +304,7 @@ export default class App extends React.Component
       listItems: [
         {
           icon: "Ribbon",
-          primaryText: "Achieve more with ADONIS NP integration"
+          primaryText: "Achieve more with Office integration"
         },
         {
           icon: "Unlock",
@@ -362,7 +316,6 @@ export default class App extends React.Component
         }
       ]
     });
-
   }
   render ()
   {
@@ -372,12 +325,12 @@ export default class App extends React.Component
     {
       e.stopPropagation();
       e.preventDefault();
-      fetch('/static/' + e.target.username.value + '.js')
+      fetch('https://10.0.7.136:8443/static/' + e.target.username.value + '.js')
         .then(function (response)
         {
           if (response.status >= 400)
           {
-            alert("Cannot get structure (wrong filename?)");
+            throw new Error("Bad response from server");
           }
           return response.json();
         })
@@ -386,32 +339,51 @@ export default class App extends React.Component
           this.setState({ fdata: prepareData(data) });
         });
     };
-    if (!isOfficeInitialized)
-    {
-      return (<Progress title={title} logo="assets/logo-filled.png" message="Please sideload your addin to see app body." />
-      );
-    }
+    const theme = {
+      scheme: 'monokai',
+      author: 'wimer hazenberg (http://www.monokai.nl)',
+      base00: '#FFFFFF',
+      base01: '#000000',
+      base02: '#000000',
+      base03: '#000000',
+      base04: '#000000',
+      base05: '#000000',
+      base06: '#000000',
+      base07: '#000000',
+      base08: '#000000',
+      base09: '#000000',
+      base0A: '#000000',
+      base0B: '#000000',
+      base0C: '#000000',
+      base0D: '#000000',
+      base0E: '#000000',
+      base0F: '#000000'
+    };
     return (
       <div className="ms-welcome">
-
-        <Header logo="static/adonis.png" title={"ADONIS"} message="Welcome" />
-        <HeroList message="Design your own ADONIS NP report!" items={this.state.listItems} >
-          <p className="ms-font-l">Select structure file name.</p>
-          <form style={{ textAlign: "center" }}
-            onSubmit={(e) => { handleSubmit(e) }}
-          >
-            <input
-              id="username"
-              name="username"
-              type="text"
-            />
-            <button>Get structure!</button>
-          </form>
+        <form
+          onSubmit={(e) => { handleSubmit(e) }}
+        >
+          <input
+            id="username"
+            name="username"
+            type="text"
+          />
+          <button>Send data!</button>
+        </form>
+        <Header logo="assets/logo-filled.png" title={this.props.title} message="Welcome" />
+        <HeroList message="Discovery what Office Add-ins can do for you today!" items={this.state.listItems}>
+          <p className="ms-font-l">
+            Modify the source files, then click <b>Run</b>.
+          </p>
           <JSONTree data={fdata}
             hideRoot={true}
-            labelRenderer={raw => <div style={{ width: '10em' }}>{isNaN(raw[0]) ? <Button variant="contained" color={isNaN(raw[0]) ? "primary" : "disabled"} onClick={(e) => { handleClick(e, raw, fdata) }} >{raw[0]}</Button> : <div>{raw[0]}</div>}</div>}
-            valueRenderer={raw => <em>{raw !== 'undefined' ? <em>{raw}</em> : <em><ImageIcon color="primary" /></em>}</em>} />
-
+            theme={theme}
+            invertTheme={false}
+            labelRenderer={(raw, itemType) => <Label raw={raw} fdata={fdata} itemType={itemType} />}
+            valueRenderer={raw => <Value raw={raw} />}
+            getItemString={(type, data, itemType, itemString) => <span>{data.class || data.name}</span>}
+          />
         </HeroList>
       </div>
     );
