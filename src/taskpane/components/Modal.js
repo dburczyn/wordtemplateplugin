@@ -29,8 +29,10 @@ export default function SimpleModal (props)
 
     const [open, setOpen] = React.useState(false);
 
-    const handleOpen = () =>
+    const handleOpen = (e) =>
     {
+        e.stopPropagation();
+        e.preventDefault();
         setOpen(true);
     };
 

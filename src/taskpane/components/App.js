@@ -174,7 +174,7 @@ function prepareData (sampledata)
       {
         if (!objValue.includes(srcValue))
         {
-          return objValue.concat('\n' + srcValue);
+          return objValue.concat(String.fromCharCode(7) + srcValue);
         }
         else
         {
@@ -371,7 +371,7 @@ export default class App extends React.Component
           />
           <button>Send data!</button>
         </form>
-        <Header logo="assets/logo-filled.png" title={this.props.title} message="Welcome" />
+            <Header logo="assets/logo-filled.png" title={this.props.title} message="Welcome" />
         <HeroList message="Discovery what Office Add-ins can do for you today!" items={this.state.listItems}>
           <p className="ms-font-l">
             Modify the source files, then click <b>Run</b>.
