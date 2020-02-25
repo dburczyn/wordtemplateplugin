@@ -38,7 +38,7 @@ function prepareData (sampledata)
   {
     preparedData.name = sampledata['ado:publishing'].model._name;
     preparedData.class = sampledata['ado:publishing'].model._class;
-    preparedData.type = sampledata['ado:publishing'].model._idclass;
+    // preparedData.type = sampledata['ado:publishing'].model._idclass;
     preparedData.images = sampledata.images;
     preparedData.chapters = [];
     for (let [index, val] of sampledata['ado:publishing'].model.notebook.chapter.entries())
@@ -80,7 +80,7 @@ function prepareData (sampledata)
       var object = {};
       object.name = oval._name;
       object.class = oval._class;
-      object.type = oval._idclass;
+      // object.type = oval._idclass;
       object.ochapters = [];
       for (let [index, val] of oval.notebook.chapter.entries())
       {
@@ -125,7 +125,7 @@ function prepareData (sampledata)
   {
     preparedData.name = sampledata['ado:publishing'].object._name;
     preparedData.class = sampledata['ado:publishing'].object._class;
-    preparedData.type = sampledata['ado:publishing'].object._idclass;
+    // preparedData.type = sampledata['ado:publishing'].object._idclass;
     preparedData.images = "";
     preparedData.chapters = [];
     for (let [index, val] of sampledata['ado:publishing'].object.notebook.chapter.entries())
@@ -302,18 +302,18 @@ export default class App extends React.Component
   {
     this.setState({
       listItems: [
-        {
-          icon: "Ribbon",
-          primaryText: "Achieve more with Office integration"
-        },
-        {
-          icon: "Unlock",
-          primaryText: "Unlock features and functionality"
-        },
-        {
-          icon: "Design",
-          primaryText: "Create and visualize like a pro"
-        }
+        // {
+        //   icon: "Ribbon",
+        //   primaryText: "Achieve more with Office integration"
+        // },
+        // {
+        //   icon: "Unlock",
+        //   primaryText: "Unlock features and functionality"
+        // },
+        // {
+        //   icon: "Design",
+        //   primaryText: "Create and visualize like a pro"
+        // }
       ]
     });
   }
@@ -325,7 +325,7 @@ export default class App extends React.Component
     {
       e.stopPropagation();
       e.preventDefault();
-      fetch('https://10.0.7.136:8443/static/' + e.target.username.value + '.js')
+      fetch('https://10.0.7.141:8443/static/' + e.target.username.value + '.js')
         .then(function (response)
         {
           if (response.status >= 400)
@@ -361,6 +361,9 @@ export default class App extends React.Component
     };
     return (
       <div className="ms-welcome">
+
+            <Header logo="adonis.png" title={this.props.title} message="ADONIS NP Template Plugin" />
+        <HeroList message="Model Structure" items={this.state.listItems}>
         <form
           onSubmit={(e) => { handleSubmit(e) }}
         >
@@ -369,12 +372,11 @@ export default class App extends React.Component
             name="username"
             type="text"
           />
-          <button>Send data!</button>
+          <button>Get structure!</button>
         </form>
-            <Header logo="assets/logo-filled.png" title={this.props.title} message="Welcome" />
-        <HeroList message="Discovery what Office Add-ins can do for you today!" items={this.state.listItems}>
+
           <p className="ms-font-l">
-            Modify the source files, then click <b>Run</b>.
+            Insert structure name, then click <b>Get Structure!</b>.
           </p>
           <JSONTree data={fdata}
             hideRoot={true}

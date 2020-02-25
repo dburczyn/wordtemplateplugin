@@ -15,6 +15,8 @@ export default class Value extends React.Component
     return (
       <div style={{ display: 'inherit' }}>
 {splited.map((value) => {
+  if (value.length > 30)
+  {value = value.substring(0,30) + "..."}
         return <div> {value !== 'undefined' ? value : <ImageIcon color="primary" />}</div>
       })}
       </div>

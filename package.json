@@ -9,7 +9,7 @@
   "config": {
     "app-to-debug": "word",
     "app-type-to-debug": "desktop",
-    "dev-server-port": 3000
+    "dev-server-port": 3001
   },
   "scripts": {
     "build": "webpack -p --mode production --https false",

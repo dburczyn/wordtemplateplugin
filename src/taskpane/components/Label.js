@@ -1,6 +1,8 @@
 import * as React from "react";
 import Button from '@material-ui/core/Button';
 import SimpleModal from "./Modal";
+import IconButton from '@material-ui/core/IconButton';
+
 
 function handleClick (e, f, data, messageShown, messageShown2, messageShown3)
 {
@@ -151,16 +153,22 @@ export default class Label extends React.Component
           <SimpleModal action={this.handler} action2={this.handler2} action3={this.handler3} />
         </div>
       );
-    else if (isNaN(raw[0]) && raw[raw.length - 1] !== 'objects')
+    else if (isNaN(raw[0]) && raw[raw.length - 1] !== 'objects' && raw[0]!=='type')
     {
       return (
-        <Button onClick={(e) => { handleClick(e, raw, fdata, messageShown, messageShown2, messageShown3) }} color='primary' variant="contained">{raw[0]}</Button>
-      );
+        <div>
+        <Button onClick={(e) => { handleClick(e, raw, fdata, messageShown, messageShown2, messageShown3) }} color='primary' variant="contained">{raw[0]==='searchname' ? 'Global': raw[0]}</Button>
+        <IconButton ></IconButton>
+        </div>
+        );
     }
-    else if (isNaN(raw[0]))
+    else if (isNaN(raw[0]) && raw[0]!=='type')
       return (
-        <Button onClick={(e) => { handleClick(e, raw, fdata, messageShown, messageShown2, messageShown3) }} color='secondary' variant="contained">{raw[0]}</Button>
-      );
+        <div>
+        <Button onClick={(e) => { handleClick(e, raw, fdata, messageShown, messageShown2, messageShown3) }} color='secondary' variant="contained">{raw[0]==='searchname' ? 'Global': raw[0]}</Button>
+        <IconButton ></IconButton>
+        </div>
+        );
     return <div></div>
   }
 }
