@@ -4,12 +4,13 @@ import Label from "./Label";
 import Value from "./Value";
 import HeroList, { HeroListItem } from "./HeroList";
 import './App.css';
+import { grupowanie } from './grupowanie.js';
 import JSONTree from 'react-json-tree';
-var groupBy = require('lodash.groupby');
-var mergeWith = require('lodash.mergewith');
-var isArray = require('lodash.isarray');
+import Button from '@material-ui/core/Button';
+import { getName } from './getname.js';
 require('es6-promise').polyfill();
 require('isomorphic-fetch');
+var flatten = require('flat')
 function getAttrs (val)
 {
   const result = [];
@@ -160,34 +161,7 @@ function prepareData (sampledata)
     }
     preparedData.objects = [];
   }
-  var groupedobjects = groupBy(preparedData.objects, 'class');
-  var out = [];
-  Object.keys(groupedobjects).forEach(function (item)
-  {
-    function customizer (objValue, srcValue)
-    {
-      if (isArray(srcValue))
-      {
-        return mergeWith(srcValue, objValue, customizer);
-      }
-      else if (typeof objValue === 'string')
-      {
-        if (!objValue.includes(srcValue))
-        {
-          return objValue.concat(String.fromCharCode(7) + srcValue);
-        }
-        else
-        {
-          return objValue;
-        }
-      }
-    }
-    var merged = groupedobjects[item][0];
-    mergeWith(merged, ...groupedobjects[item], customizer);
-
-    out.push(merged);
-  });
-  preparedData.objects=out;
+preparedData.objects=grupowanie(preparedData.objects);
   return preparedData;
 }
 function getComplexVals (passedval, passedinp)
@@ -295,7 +269,12 @@ export default class App extends React.Component
     super(props, context);
     this.state = {
       listItems: [],
-      fdata: {}
+      fdata: {},
+      arraytotableout:[],
+      splitedelenments:[],
+      key:0,
+      searched2:'',
+      visibility:true,
     };
   }
   componentDidMount ()
@@ -320,13 +299,39 @@ export default class App extends React.Component
   render ()
   {
     const { title, isOfficeInitialized } = this.props;
-    const { fdata } = this.state;
+    const { fdata,arraytotableout,splitedelenments,searched2 } = this.state;
+      const nodechecker = (a) =>
+      {
+        var renderuj=false;
+          splitedelenments.forEach(element => {
+            if( a.toString()!=='' && element.slice().reverse().toString().toUpperCase().includes(a.toString().toUpperCase())&& !element.slice().reverse().toString().toUpperCase().includes(('o'+a.toString()).toUpperCase()))
+                      {
+            renderuj=true;
+          }
+         });
+         return renderuj;
+      }
+      const preparekeysforsearch = (key) =>
+      {
+var qq =flatten(fdata);
+var splitedelenmentsinner=[]
+ Object.keys(qq).forEach(element => {
+  if (key!=='' && typeof qq[element] === 'string'&& qq[element].toUpperCase().includes(key.toUpperCase()))
+  {
+  splitedelenmentsinner.push(element.split('.'));
+  }
+ });
+return splitedelenmentsinner;
+      }
     const handleSubmit = (e) =>
     {
       e.stopPropagation();
       e.preventDefault();
-      fetch('https://10.0.7.141:8443/static/' + e.target.username.value + '.js')
-        .then(function (response)
+      this.setState({ key: Math.random() });
+      this.setState({ visibility: false });
+      // fetch('https://10.0.7.141:8443/static/' + e.target.username.value + '.js')
+      fetch('https://testfileserv.herokuapp.com/test.js')
+      .then(function (response)
         {
           if (response.status >= 400)
           {
@@ -338,6 +343,26 @@ export default class App extends React.Component
         {
           this.setState({ fdata: prepareData(data) });
         });
+    };
+    const handleSubmit2 = (e) =>
+    {
+      e.stopPropagation();
+      e.preventDefault();
+      this.setState({ key: Math.random() });
+      var searched = e.target.username2.value;
+   this.setState({ splitedelenments: preparekeysforsearch(searched)});
+   this.setState({ searched2: searched});
+    };
+    const handleClick = (e) =>
+    {
+      e.stopPropagation();
+      e.preventDefault();
+  return Word.run(async context =>
+  {
+    var selectionRange = context.document.getSelection();
+    selectionRange.insertText("{FOR model in models}\n\n{END-FOR model}");
+    await context.sync();
+  });
     };
     const theme = {
       scheme: 'monokai',
@@ -361,9 +386,11 @@ export default class App extends React.Component
     };
     return (
       <div className="ms-welcome">
-
-            <Header logo="adonis.png" title={this.props.title} message="ADONIS NP Template Plugin" />
-        <HeroList message="Model Structure" items={this.state.listItems}>
+        { this.state.visibility?
+        <span style={{visibility: this.state.visibility}}>
+                 <Header logo="./adonis.png" title={this.props.title} message="ADONIS Word Report Creator" />
+        <HeroList message="Insert model ID for template preparation" items={this.state.listItems}>
+        </HeroList>
         <form
           onSubmit={(e) => { handleSubmit(e) }}
         >
@@ -372,21 +399,44 @@ export default class App extends React.Component
             name="username"
             type="text"
           />
-          <button>Get structure!</button>
+          <button>Load model</button>
         </form>
-
-          <p className="ms-font-l">
-            Insert structure name, then click <b>Get Structure!</b>.
+        </span> :
+        <span>
+          <p>
+          Place coursor in Word template in the left frame and click buttons in the right frame to insert ADONIS elements in the template. Blue buttons represent model attributes, red buttons represent objects in the model.
           </p>
-          <JSONTree data={fdata}
+          <Button onClick={(e) => { handleClick(e) }} color='primary' variant="contained">{getName('start')}</Button>
+          </span>
+  }
+        <form
+          onSubmit={(e) => { handleSubmit2(e) }}
+        >
+          <input
+            id="username2"
+            name="username2"
+            type="text"
+          />
+          <button>Search</button>
+        </form>
+        <span style={{width: '100%'}}>
+          <JSONTree
+          key={this.state.key}
+          data={fdata}
             hideRoot={true}
             theme={theme}
             invertTheme={false}
-            labelRenderer={(raw, itemType) => <Label raw={raw} fdata={fdata} itemType={itemType} />}
-            valueRenderer={raw => <Value raw={raw} />}
-            getItemString={(type, data, itemType, itemString) => <span>{data.class || data.name}</span>}
+            shouldExpandNode={(a,b,c) => {
+              let dorender = nodechecker(a)
+return dorender;
+            }}
+            // labelRenderer={(raw, itemType) =>raw}
+              // valueRenderer={raw => <span>{raw}</span>}
+             labelRenderer={(raw, itemType) => <Label raw={raw} fdata={fdata} itemType={itemType} />}
+              valueRenderer={raw => <Value raw={raw} searched2={searched2} />}
+             getItemString={(type, data, itemType, itemString) => <span>{data.class || data.name}</span>}
           />
-        </HeroList>
+          </span>
       </div>
     );
   }

@@ -31,6 +31,7 @@
     "@material-ui/icons": "^4.5.1",
     "core-js": "^3.1.4",
     "es6-promise": "^4.2.8",
+    "flat": "^4.1.0",
     "isomorphic-fetch": "^2.2.1",
     "lodash.groupby": "^4.6.0",
     "lodash.isarray": "^4.0.0",
