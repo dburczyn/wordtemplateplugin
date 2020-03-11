@@ -82,7 +82,7 @@ module.exports = async (env, options)  => {
       })
     ],
     externals: {
-      'Config': JSON.stringify(require('./data/sampleadonis.js'))
+      // 'Config': JSON.stringify(require('./data/sampleadonis.js'))
     },
     devServer: {
       headers: {
