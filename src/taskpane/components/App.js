@@ -9,7 +9,11 @@ import { getName } from './getname.js';
 require('es6-promise').polyfill();
 require('isomorphic-fetch');
 var flatten = require('flat');
-
+/////////////////////
+// var Word={
+//   run:()=>null
+// };
+////////////////////
 export default class App extends React.Component
 {
   constructor(props, context)
@@ -42,7 +46,7 @@ export default class App extends React.Component
 var qq =flatten(fdata);
 var splitedelenmentsinner=[]
  Object.keys(qq).forEach(element => {
-  if (key!=='' && typeof qq[element] === 'string'&& qq[element].toUpperCase().includes(key.toUpperCase()))
+  if (key!=='' && typeof qq[element] === 'string' && !element.includes('searchname') && qq[element].toUpperCase().includes(key.toUpperCase()))
   {
   splitedelenmentsinner.push(element.split('.'));
   }
@@ -56,7 +60,7 @@ return splitedelenmentsinner;
       this.setState({ key: Math.random() });
       this.setState({ visibility: false });
       // fetch('https://10.0.7.141:8443/static/' + e.target.username.value + '.js')
-      fetch('https://testfileserv.herokuapp.com/test.js')
+      fetch('https://testfileserv.herokuapp.com/test_old_akawycieczka.js')
       .then(function (response)
         {
           if (response.status >= 400)
@@ -90,27 +94,27 @@ return splitedelenmentsinner;
     await context.sync();
   });
     };
-    const handleClick2 = (e) =>
-    {
-      e.stopPropagation();
-      e.preventDefault();
-  return Word.run(async context =>
-  {
-    var selectionRange = context.document.getSelection();
-    var items = [
-      ["{gCN($attri.value[0])}","{gCN($attri.value[1])}","{gCN($attri.value[2])}","{gCN($attri.value[3])}","{gCN($attri.value[4])}"],
-      ["{FOR av IN mI($attri.value)}","","","",""],
-      ["{$av[0]}","{$av[1]}","{$av[2]}","{$av[3]}","{$av[4]}"],
-      ["{END-FOR av}","","","",""],
-    ];
+  //   const handleClick2 = (e) =>
+  //   {
+  //     e.stopPropagation();
+  //     e.preventDefault();
+  // return Word.run(async context =>
+  // {
+  //   var selectionRange = context.document.getSelection();
+  //   var items = [
+  //     ["{gCN($attri.value[0])}","{gCN($attri.value[1])}","{gCN($attri.value[2])}","{gCN($attri.value[3])}","{gCN($attri.value[4])}"],
+  //     ["{FOR av IN mI($attri.value)}","","","",""],
+  //     ["{$av[0]}","{$av[1]}","{$av[2]}","{$av[3]}","{$av[4]}"],
+  //     ["{END-FOR av}","","","",""],
+  //   ];
 
-    selectionRange.insertTable(4, 5, "After", items);
+  //   selectionRange.insertTable(4, 5, "After", items);
 
 
 
-    await context.sync();
-  });
-    };
+  //   await context.sync();
+  // });
+  //   };
     const theme = {
       scheme: 'monokai',
       author: 'wimer hazenberg (http://www.monokai.nl)',
@@ -165,7 +169,7 @@ return splitedelenmentsinner;
           <button>Search</button>
         </form>
           <Button onClick={(e) => { handleClick(e) }} color='primary' variant="contained">{getName('start')}</Button>
-          <Button onClick={(e) => { handleClick2(e) }} color='primary' variant="contained">testtable</Button>
+          {/* <Button onClick={(e) => { handleClick2(e) }} color='primary' variant="contained">testtable</Button> */}
           </span>
   }
          <span style={{width: '100%'}}>

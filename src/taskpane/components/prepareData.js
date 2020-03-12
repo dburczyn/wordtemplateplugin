@@ -63,11 +63,21 @@ export function prepareData (sampledata)
           chapter.attributes.push(attri);
         }
       }
+      if (chapter.attributes.length>0)
+      {
       preparedData.chapters[index] = chapter;
+      }
     }
     preparedData.objects = [];
-    for (let [oindex, oval] of sampledata['ado:publishing'].model.object.entries())
-    {
+    var arraytoiterate=[];
+    if (typeof sampledata['ado:publishing'].model.object[Symbol.iterator] === 'function')
+{
+arraytoiterate=sampledata['ado:publishing'].model.object;
+}
+else {
+arraytoiterate.push(sampledata['ado:publishing'].model.object);
+  }
+    for (let [oindex, oval] of arraytoiterate.entries()) {
       var object = {};
       object.name = oval._name;
       object.class = oval._class;
@@ -104,7 +114,11 @@ export function prepareData (sampledata)
             ochapter.attributes.push(oattri);
           }
         }
-        object.ochapters[index] = ochapter;
+        if (ochapter.attributes.length>0)
+        {
+          object.ochapters[index] = ochapter;
+        }
+
       }
       preparedData.objects[oindex] = object;
     }
@@ -210,7 +224,7 @@ function getValue (inp)
 {
   if (inp.hasOwnProperty('attrval'))
   {
-    if (inp.attrval.attrvaltype._type === 'ENUM')
+    if (inp.attrval.attrvaltype._type === 'ENUM' || inp.attrval.attrvaltype._type === 'ENUMLIST')
     {
       return (inp.attrval._name);
     } else if (inp.attrval.attrvaltype._type === 'BOOL')

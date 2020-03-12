@@ -2,6 +2,32 @@ import * as React from "react";
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import { getName } from './getname.js';
+/////////////////////
+// var Word={
+//   run:()=>null
+// };
+////////////////////
+
+function insertComplex(type,refup,selectionRange)
+{
+  let items = [
+    [],
+    ["{FOR av IN mI(gV($model, '"+refup.searchname+"'))}"],
+    [],
+    ["{END-FOR av}"],
+  ];
+
+for (let index = 0; index < refup.value.length; index++) {
+    items[0].push("{gV($"+type+",'"+refup.searchname+"')["+index+"].name}");
+    items[2].push("{$av["+index+"]}");
+}
+ selectionRange.insertText("{IF Array.isArray(gV($"+type+",'"+refup.searchname+"'))}", "Before");
+ selectionRange.insertText("{END-IF}", "After");
+ selectionRange.insertTable(4, refup.value.length, "After", items);
+
+}
+
+
 function handleClick (e, f, data)
 {
   e.stopPropagation();
@@ -17,19 +43,10 @@ function handleClick (e, f, data)
   arrtorefup.shift();
 
   var refup = arrtorefup.reduceRight((o, i) => o[i], prepareddata);
-  // console.log(typeof f)
-  // console.log(typeof f[0])
-  // console.log(f.shift())
-  // console.log(typeof f.searchname)
-  // console.log(typeof f.value)
+
   var ref = f.reduceRight((o, i) => o[i], prepareddata);
 
-  // console.log("ref: " + ref)
-  //  console.log("f: " + f)
-  // console.log("refup: " + refup)
-  // console.log("refup searchame: " + refup.searchname)
-  // console.log("refup name: " + refup.name)
-  // console.log("refup value: " + refup.value)
+
   return Word.run(async context =>
   {
     var selectionRange = context.document.getSelection();
@@ -68,31 +85,37 @@ function handleClick (e, f, data)
     }
     else if (f.length === 2 && f[0] === 'images')
     {
-      selectionRange.insertText("{FOR image IN model.images}\n{IMAGE insertImg($image,25)}\n{END-FOR image}", "After");
+      selectionRange.insertText("{FOR image IN $model.images}\n{IMAGE insertImg($image,25)}\n{END-FOR image}", "After");
     }
-    // else if (!isNaN(f[1]) && f[0] === 'name')
-    // {
-    //   selectionRange.insertText("{$" + f[2] + ".name}", "After");
-    // }
-    // else if (!isNaN(f[1]) && f[0] === 'value')
-    // {
-    //   selectionRange.insertText("{IF typeof $" + f[2] + ".value !== 'object'}{$" + f[2] + ".value}{END-IF}", "After");
-    // }
     else if (f[f.length - 2] !== 'objects' &&  (f[0] === 'searchname' || f[0] === 'name'))
     {
-      selectionRange.insertText("{IF typeof gN($model, '" + refup.searchname + "') !== 'object'}{gN($model, '" + refup.searchname + "')}{END-IF}", "After");
+      selectionRange.insertText("{gN($model, '" + refup.searchname + "')}", "After");
     }
     else if (f[f.length - 2] === 'objects' && (f[0] === 'searchname' || f[0] === 'name' ))
     {
-      selectionRange.insertText("{IF typeof gN($objects, '" + refup.searchname + "') !== 'object'}{gN($objects, '" + refup.searchname + "')}{END-IF}", "After");
+      selectionRange.insertText("{gN($objects, '" + refup.searchname + "')}", "After");
     }
     else if (f[f.length - 2] !== 'objects' &&  (f[0] === 'searchname' ||  f[0] === 'value'))
     {
-      selectionRange.insertText("{IF typeof gV($model, '" + refup.searchname + "') !== 'object'}{gV($model, '" + refup.searchname + "')}{END-IF}", "After");
+      if (typeof refup.value !=='object' )
+      {
+      selectionRange.insertText("{gV($model, '" + refup.searchname + "')}", "After");
+      }
+      else if (typeof refup.value ==='object' )
+      {
+        insertComplex('model',refup,selectionRange);
+      }
     }
     else if (f[f.length - 2] === 'objects' && (f[0] === 'searchname' || f[0] === 'value'))
     {
-      selectionRange.insertText("{IF typeof gV($objects, '" + refup.searchname + "') !== 'object'}{gV($objects, '" + refup.searchname + "')}{END-IF}", "After");
+      if (typeof refup.value !=='object' )
+      {
+      selectionRange.insertText("{gV($objects, '" + refup.searchname + "')}", "After");
+      }
+      else if (typeof refup.value ==='object' )
+      {
+        insertComplex('objects',refup,selectionRange);
+      }
     }
     else if (!isNaN(f[1]) && f[0] === 'class')
     {
@@ -125,8 +148,8 @@ export default class Label extends React.Component
     {
       return (
         <span>
-          {/* <Button onClick={(e) => { handleClick(e, raw, fdata) }} color='primary' variant="contained">{getName(raw[0])}</Button> */}
-          {getName(raw[0])}
+          <Button onClick={(e) => { handleClick(e, raw, fdata) }} color='primary' variant="contained">{getName(raw[0])}</Button>
+          {/* {getName(raw[0])} */}
         </span>
       );
     }
@@ -143,8 +166,8 @@ export default class Label extends React.Component
     else if (raw && isNaN(raw[0]) && itemType === 'Array')
       return (
         <span>
-          {/* <Button onClick={(e) => { handleClick(e, raw, fdata) }} color='secondary' variant="contained">{getName(raw[0])}</Button> */}
-          {getName(raw[0])}
+          <Button onClick={(e) => { handleClick(e, raw, fdata) }} color='secondary' variant="contained">{getName(raw[0])}</Button>
+          {/* {getName(raw[0])} */}
         </span>
       );
     else if (raw && isNaN(raw[0]) && raw[raw.length - 1] !== 'objects' && raw[0]!=='type')

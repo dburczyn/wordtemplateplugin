@@ -14,10 +14,14 @@ export default class Value extends React.Component
   {
     const { data,searched,visible,kij } = this.state;
     var splited = data.toString().split(String.fromCharCode(7));
-    // console.log(searched)
     return (
       <span style={{width: '100%'}}>
 {splited.map((value) => {
+value=value.replace(/&amp;/g, '&')
+          .replace(/&quot;/g, '"')
+          .replace(/&gt;/g, '>')
+          .replace(/&lt;/g, '<')
+          .replace(/&#039;/g, "'");
   if (kij!=='searchname')
   {
 if (typeof value==='string' && searched!=='' && value.toUpperCase().includes(searched.toUpperCase()))
